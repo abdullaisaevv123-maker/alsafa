@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Байту закат</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #0c1322; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Top Bar */
+    .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; position: relative; }
+    .brand-title { font-size: 2.2rem; font-weight: bold; width: 100%; text-align: center; }
+    
+    /* Compact Lang Switcher */
+    .lang-switcher { position: absolute; right: 40px; top: 25px; display: flex; gap: 5px; background: #172033; padding: 4px; border-radius: 8px; border: 1px solid #2d3f5e; }
+    .lang-btn { background: none; border: none; color: #94a3b8; padding: 5px 10px; font-weight: bold; cursor: pointer; border-radius: 5px; font-size: 0.85rem; }
+    .lang-btn.active { background: #2563eb; color: #fff; }
+
+    .container { max-width: 950px; width: 100%; margin: 0 auto; padding: 20px; flex: 1; }
+    .step { display: none; }
+    .step.active { display: block; }
+
+    /* Card */
+    .card { background-color: #121a2d; border: 1px solid #1e3a8a; border-radius: 20px; padding: 35px; box-shadow: 0 0 30px rgba(30, 58, 138, 0.25); margin-bottom: 25px; }
+    .registration-card { cursor: pointer; text-align: center; transition: transform 0.2s; }
+    .registration-card:hover { transform: translateY(-3px); }
+    .icon-folder { font-size: 80px; color: #3b82f6; margin-bottom: 15px; }
+
+    /* Buttons */
+    .bottom-buttons { display: flex; gap: 20px; justify-content: center; }
+    .btn { padding: 12px 20px; border-radius: 10px; border: none; font-size: 0.95rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+    
+    .btn-primary { background-color: #857523; color: white; width: 100%; opacity: 0.3; pointer-events: none; cursor: not-allowed; }
+    .btn-primary.active-btn { opacity: 1; pointer-events: auto; cursor: pointer; background-color: #d97706; }
+    
+    .btn-blue { background-color: #2563eb; color: white; }
+    .btn-blue:disabled { opacity: 0.3; pointer-events: none; cursor: not-allowed; }
+    
+    .btn-success { background-color: #10b981; color: white; }
+    .btn-danger { background-color: #ef4444; color: white; }
+    .btn-warning { background-color: #f59e0b; color: white; }
+    .btn-secondary { background-color: #121a2d; border: 1px solid #2d3f5e; color: white; }
+
+    /* Inputs & Country Selector */
+    .input-group { text-align: left; margin-bottom: 15px; position: relative; }
+    .input-group label { display: block; font-size: 0.9rem; color: #94a3b8; margin-bottom: 8px; }
+    .input-group input { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #2d3f5e; background-color: #0b111e; color: white; font-size: 1rem; outline: none; }
+    
+    /* Password Eye Icon Wrapper */
+    .password-wrapper { position: relative; display: flex; align-items: center; }
+    .password-wrapper input { padding-right: 45px; }
+    .eye-icon { position: absolute; right: 15px; color: #94a3b8; cursor: pointer; font-size: 1.2rem; }
+    .eye-icon:hover { color: #00f2fe; }
+
+    .phone-wrapper { display: flex; align-items: center; background-color: #0b111e; border: 1px solid #2d3f5e; border-radius: 10px; overflow: hidden; }
+    .country-select { background-color: #172033; color: #00f2fe; font-weight: bold; border: none; padding: 14px 10px; outline: none; cursor: pointer; border-right: 1px solid #2d3f5e; }
+    .phone-wrapper input { border: none; background: transparent; }
+
+    /* Rules Grid */
+    .rules-grid { display: flex; gap: 20px; margin: 25px 0; }
+    .rule-box { flex: 1; border-radius: 14px; padding: 25px; display: flex; flex-direction: column; align-items: center; gap: 12px; font-size: 0.85rem; color: #94a3b8; background-color: #0b111e; }
+    .rule-box.invalid { border: 1px solid #991b1b; }
+    .rule-box.valid { border: 1px solid #065f46; }
+    .badge { padding: 8px 16px; border-radius: 20px; font-weight: bold; }
+    .badge-red { background-color: #450a0a; color: #f87171; }
+    .badge-green { background-color: #022c22; color: #34d399; }
+
+    /* Photo Upload UI */
+    .photo-upload-container { display: flex; gap: 20px; margin: 25px 0; }
+    .photo-card { flex: 1; background-color: #0b111e; border-radius: 15px; padding: 15px; text-align: center; border: 1px solid #1e293b; }
+    .photo-preview-box { height: 180px; background-color: #121a2d; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; border: 2px dashed #2d3f5e; }
+    .photo-preview-box img { width: 100%; height: 100%; object-fit: cover; }
+    .plus-icon { font-size: 30px; color: #64748b; background: #1e293b; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    
+    /* Admin Dashboard Cards */
+    .admin-folders { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px; }
+    .folder-card { background-color: #121a2d; border: 1px solid #1e3a8a; border-radius: 16px; padding: 30px 20px; cursor: pointer; text-align: left; transition: 0.2s; }
+    .folder-card:hover { transform: translateY(-3px); }
+    .folder-icon { font-size: 40px; margin-bottom: 15px; }
+
+    /* Tabs & Tables */
+    .admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab-btn { padding: 10px 20px; background: #172033; border: 1px solid #2d3f5e; color: white; border-radius: 8px; cursor: pointer; }
+    .tab-btn.active { background: #2563eb; border-color: #2563eb; }
+    .excel-table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 15px; }
+    .excel-table th, .excel-table td { padding: 12px; border-bottom: 1px solid #2d3f5e; }
+    .excel-table th { background-color: #172033; color: #00f2fe; cursor: pointer; }
+    .wa-link { color: #10b981; text-decoration: none; font-weight: bold; }
+
+    /* Vertical List View for Children Photos */
+    .children-list-container { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
+    .child-list-item { background: #0b111e; border: 1px solid #2d3f5e; border-radius: 12px; padding: 15px; display: flex; align-items: center; justify-content: space-between; gap: 15px; transition: 0.2s; cursor: pointer; }
+    .child-list-item:hover { border-color: #2563eb; }
+    .child-info { text-align: left; }
+    .child-info h4 { font-size: 0.95rem; color: #00f2fe; margin-bottom: 4px; }
+    .child-info p { font-size: 0.8rem; color: #94a3b8; }
+    .child-thumbs { display: flex; gap: 10px; }
+    .thumb-img { width: 70px; height: 50px; border-radius: 6px; object-fit: cover; border: 1px solid #2d3f5e; }
+
+    /* Overlay Modal for Zoom View */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { max-width: 450px; width: 90%; position: relative; }
+    .zoom-modal-card { max-width: 750px; width: 90%; background: #0b111e; border: 2px solid #2563eb; border-radius: 20px; padding: 25px; text-align: center; max-height: 90vh; overflow-y: auto; }
+
+    /* Loader */
+    .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(12, 19, 34, 0.85); z-index: 2000; justify-content: center; align-items: center; flex-direction: column; }
+    .spinner { border: 4px solid #1e293b; border-top: 4px solid #00f2fe; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+      .admin-folders, .photo-upload-container, .rules-grid { flex-direction: column; grid-template-columns: 1fr; }
+      .child-list-item { flex-direction: column; align-items: flex-start; }
+      .child-thumbs { width: 100%; justify-content: flex-start; margin-top: 10px; }
+      .thumb-img { width: 100px; height: 70px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Animation -->
+  <div id="loader" class="loader-overlay">
+    <div class="spinner"></div>
+    <div id="loader-text" style="color: #00f2fe; font-weight: bold;">Сакталууда...</div>
+  </div>
+
+  <header class="top-bar">
+    <div style="width: 100px;"></div>
+    <h1 class="brand-title">Байту закат</h1>
+    <div id="lang-container" class="lang-switcher">
+      <button class="lang-btn active" onclick="changeLanguage('ky')">КЖ</button>
+      <button class="lang-btn" onclick="changeLanguage('ru')">РУ</button>
+      <button class="lang-btn" onclick="changeLanguage('ar')">АР</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- 1-КАДАМ: Башкы бет -->
+    <section id="step-1" class="step active">
+      <h2 style="color: #00f2fe; margin-bottom: 25px;" data-i18n="sub_title">Байту закатка съемка</h2>
+      <div class="card registration-card" onclick="goToStep(2)">
+        <i class="fa-solid fa-folder icon-folder"></i>
+        <h2 data-i18n="register">Каттоо</h2>
+      </div>
+      <div class="bottom-buttons">
+        <button class="btn btn-secondary" onclick="openAdminModal()">
+          <i class="fa-solid fa-user"></i> <span data-i18n="admin">Админ</span>
+        </button>
+        <a id="curator-main-btn" href="#" target="_blank" class="btn btn-secondary">
+          <i class="fa-solid fa-phone" style="color: #10b981;"></i> <span data-i18n="curator_contact">Куратор менен байланышуу</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- 2-КАДАМ: ФИО -->
+    <section id="step-2" class="step">
+      <div class="card">
+        <h3 style="text-align: left; margin-bottom: 20px;" data-i18n="enter_info">Маалымат киргизүү</h3>
+        <div class="input-group">
+          <label data-i18n="fio_label">Баланын Ф.И.О.:</label>
+          <input type="text" id="student-name" placeholder="Мисалы: Асанов Асан">
+        </div>
+        <button class="btn btn-blue" style="width: 100%;" onclick="submitFIO()" data-i18n="next">Улантуу &rarr;</button>
+      </div>
+    </section>
+
+    <!-- 3-КАДАМ: Телефон (Кыргызстан +996 / Россия +7) -->
+    <section id="step-3" class="step">
+      <div class="card">
+        <h3 style="text-align: left; margin-bottom: 20px;" data-i18n="phone_title">Телефон номер киргизүү</h3>
+        <div class="input-group">
+          <label data-i18n="phone_label">Телефон номериңиз:</label>
+          <div class="phone-wrapper">
+            <select id="country-code" class="country-select" onchange="updatePhonePlaceholder()">
+              <option value="+996">+996</option>
+              <option value="+7">+7</option>
+            </select>
+            <input type="tel" id="student-phone" placeholder="779654521" maxlength="11" oninput="formatPhoneInput(this)">
+          </div>
+        </div>
+        <button class="btn btn-blue" style="width: 100%;" onclick="submitPhone()" data-i18n="next">Улантуу &rarr;</button>
+      </div>
+    </section>
+
+    <!-- 4-КАДАМ: Эрежелер (Чекбокс аркылуу баскыч ачылат) -->
+    <section id="step-4" class="step">
+      <div class="card">
+        <h3 style="margin-bottom: 20px;" data-i18n="rules_title">Сүрөттөрдү туура тартуу үчүн төмөндөгү эрежени сактаңыз:</h3>
+        <div class="rules-grid">
+          <div class="rule-box invalid">
+            <div style="width: 30px; height: 50px; border: 3px solid #ef4444; border-radius: 6px;"></div>
+            <span class="badge badge-red" data-i18n="rule_bad_btn">Мынтип тартпаңыз</span>
+            <p data-i18n="rule_bad_text">Тигинен (вертикалдуу) тартууга болбойт</p>
+          </div>
+          <div class="rule-box valid">
+            <div style="width: 50px; height: 30px; border: 3px solid #10b981; border-radius: 6px;"></div>
+            <span class="badge badge-green" data-i18n="rule_good_btn">Ушунтип тартыңыз</span>
+            <p data-i18n="rule_good_text">Туурасынан (горизонталдуу) тартыңыз</p>
+          </div>
+        </div>
+        <div style="margin-bottom: 25px; text-align: center;">
+          <input type="checkbox" id="accept-rules" onchange="toggleRuleNextBtn(this.checked)" style="transform: scale(1.3); cursor: pointer;">
+          <label for="accept-rules" style="margin-left: 8px; cursor: pointer;" data-i18n="rules_agree">Тартуу эрежесин түшүндүм</label>
+        </div>
+        <button id="btn-step-4" class="btn btn-blue" style="width: 100%;" disabled onclick="goToStep(5)" data-i18n="next">Улантуу &rarr;</button>
+      </div>
+    </section>
+
+    <!-- 5-КАДАМ: Сүрөт тартуу -->
+    <section id="step-5" class="step">
+      <div class="card">
+        <h2 id="display-fio" style="color: #00f2fe; text-align: left; margin-bottom: 10px;">-</h2>
+        <p style="color: #94a3b8; text-align: left; font-size: 0.9rem;" data-i18n="photo_instruction">Сүрөттөрдү горизонталдуу (туурасынан) тартыңыз: белинен өйдө жана толук бою түшкөн болушы керек.</p>
+        
+        <div class="photo-upload-container">
+          <div class="photo-card">
+            <div class="photo-preview-box" onclick="triggerCamera('img1')">
+              <img id="prev1" style="display:none;">
+              <div id="icon1" class="plus-icon">+</div>
+              <input type="file" id="img1" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoUpload(this, 'prev1', 'icon1', 1)">
+            </div>
+            <div style="text-align: left; font-weight: bold; margin-top: 15px;" data-i18n="photo1_title">Белинен өйдө түшкөн</div>
+            <div style="text-align: left; color: #ef4444; font-size: 0.8rem; margin-top: 5px; cursor: pointer;" onclick="triggerCamera('img1')"><i class="fa-solid fa-circle-info"></i> <span data-i18n="add_photo">Сүрөт кошуу &gt;</span></div>
+          </div>
+          <div class="photo-card">
+            <div class="photo-preview-box" onclick="triggerCamera('img2')">
+              <img id="prev2" style="display:none;">
+              <div id="icon2" class="plus-icon">+</div>
+              <input type="file" id="img2" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoUpload(this, 'prev2', 'icon2', 2)">
+            </div>
+            <div style="text-align: left; font-weight: bold; margin-top: 15px;" data-i18n="photo2_title">Толук бою түшкөн</div>
+            <div style="text-align: left; color: #ef4444; font-size: 0.8rem; margin-top: 5px; cursor: pointer;" onclick="triggerCamera('img2')"><i class="fa-solid fa-circle-info"></i> <span data-i18n="add_photo">Сүрөт кошуу &gt;</span></div>
+          </div>
+        </div>
+
+        <button id="final-register-btn" class="btn btn-primary" onclick="finalSubmit()" data-i18n="register">Каттоо</button>
+      </div>
+    </section>
+
+    <!-- 6-КАДАМ: Ийгиликтүү аяктоо -->
+    <section id="step-6" class="step">
+      <div class="card" style="text-align: center;">
+        <i class="fa-solid fa-circle-check" style="font-size: 70px; color: #10b981; margin-bottom: 20px;"></i>
+        <h2 style="margin-bottom: 15px;" data-i18n="success_title">Сиз ийгиликтүү катталдыңыз!</h2>
+        <button class="btn btn-blue" onclick="resetForm()" data-i18n="home">Башкы бетке кайтуу</button>
+      </div>
+    </section>
+
+    <!-- АДМИН ПАНЕЛИ: Башкы -->
+    <section id="step-admin-main" class="step">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Администратор Панели</h2>
+        <button class="btn btn-danger" onclick="goToStep(1)"><i class="fa-solid fa-door-open"></i> Чыгуу</button>
+      </div>
+      <div class="admin-folders">
+        <div class="folder-card" onclick="openAdminCategory('registered')">
+          <i class="fa-solid fa-folder folder-icon" style="color: #00f2fe;"></i>
+          <h3>Катталгандар</h3>
+          <p style="color: #64748b; font-size: 0.85rem;">Катталган колдонуучулар</p>
+        </div>
+        <div class="folder-card" onclick="openAdminCategory('settings')">
+          <i class="fa-solid fa-folder folder-icon" style="color: #f59e0b;"></i>
+          <h3>Жөндөөлөр</h3>
+          <p style="color: #64748b; font-size: 0.85rem;">Системалык жөндөөлөр</p>
+        </div>
+        <div class="folder-card" onclick="openAdminCategory('curators')">
+          <i class="fa-solid fa-folder folder-icon" style="color: #38bdf8;"></i>
+          <h3>Кураторлор</h3>
+          <p style="color: #64748b; font-size: 0.85rem;">Кураторлордун тизмеси</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- АДМИН: Катталгандар -->
+    <section id="step-admin-registered" class="step">
+      <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px;">
+        <button class="btn btn-secondary" onclick="goToStep('admin-main')">&larr; Аркага</button>
+        <h2>Катталгандар</h2>
+      </div>
+      
+      <div class="admin-tabs">
+        <button class="tab-btn active" id="tab-excel-btn" onclick="switchAdminTab('excel')">Excel Системасы</button>
+        <button class="tab-btn" id="tab-photos-btn" onclick="switchAdminTab('photos')">Балдар & Сүрөттөр</button>
+      </div>
+
+      <!-- Excel Tab -->
+      <div id="tab-excel">
+        <div class="input-group">
+          <input type="text" id="admin-search-excel" placeholder="Ф.И.О. же телефон номери менен издөө..." oninput="renderAdminData()">
+        </div>
+        <div style="margin-bottom: 15px; text-align: left;">
+          <button class="btn btn-success" onclick="exportToExcel()"><i class="fa-solid fa-file-excel"></i> Excel (.csv) көчүрүү</button>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="excel-table">
+            <thead>
+              <tr>
+                <th onclick="sortTable('id')">№ <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortTable('name')">Ф.И.О. <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortTable('phone')">Телефон <i class="fa-solid fa-sort"></i></th>
+                <th>Дата</th>
+              </tr>
+            </thead>
+            <tbody id="excel-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Photos Tab (Vertical List View + Search Bar) -->
+      <div id="tab-photos" style="display: none;">
+        <div class="input-group">
+          <input type="text" id="admin-search-photos" placeholder="Балдарды Ф.И.О. же номери боюнча издөө..." oninput="renderAdminData()">
+        </div>
+        <div id="children-vertical-list" class="children-list-container"></div>
+      </div>
+    </section>
+
+    <!-- АДМИН: Жөндөөлөр -->
+    <section id="step-admin-settings" class="step">
+      <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px;">
+        <button class="btn btn-secondary" onclick="goToStep('admin-main')">&larr; Аркага</button>
+        <h2>Жөндөөлөр</h2>
+      </div>
+      <div class="card" style="text-align: left;">
+        <div class="input-group">
+          <label>Админ Паролун өзгөртүү:</label>
+          <div class="password-wrapper">
+            <input type="password" id="setting-pass" value="1245">
+            <i class="fa-solid fa-eye-slash eye-icon" onclick="togglePasswordVisibility('setting-pass', this)"></i>
+          </div>
+          <button class="btn btn-blue" style="margin-top: 10px;" onclick="savePassword()">Паролду сактоо</button>
+        </div>
+        <hr style="border-color: #2d3f5e; margin: 20px 0;">
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+          <label><input type="checkbox" id="toggle-download" onchange="saveSettings()" checked> Сүрөттөрдү көчүрүү (Скачать) баскычын күйгүзүү</label>
+          <label><input type="checkbox" id="toggle-delete" onchange="saveSettings()" checked> Сүрөттөрдү өчүрүү (Удалить) баскычын күйгүзүү</label>
+        </div>
+      </div>
+    </section>
+
+    <!-- АДМИН: Кураторлор -->
+    <section id="step-admin-curators" class="step">
+      <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px;">
+        <button class="btn btn-secondary" onclick="goToStep('admin-main')">&larr; Аркага</button>
+        <h2>Кураторлорду Башкаруу</h2>
+      </div>
+      <div class="card" style="text-align: left;">
+        <h3 style="margin-bottom: 15px;">Жаңы Куратор Кошуу / Өңдөө</h3>
+        <input type="hidden" id="curator-edit-id">
+        <div class="input-group">
+          <label>Куратордун Аты-жөнү:</label>
+          <input type="text" id="curator-name-input" placeholder="Мисалы: Башкы куратор">
+        </div>
+        <div class="input-group">
+          <label>Телефон номери:</label>
+          <input type="text" id="curator-phone-input" placeholder="+99699114003 же +79991234567">
+        </div>
+        <button class="btn btn-success" id="curator-save-btn" onclick="saveCurator()"><i class="fa-solid fa-plus"></i> Кураторду Сактоо</button>
+        <button class="btn btn-secondary" id="curator-cancel-btn" style="display:none;" onclick="cancelCuratorEdit()">Баш тартуу</button>
+
+        <hr style="border-color: #2d3f5e; margin: 25px 0;">
+        <h3>Кураторлордун Тизмеси</h3>
+        <div id="curators-list" style="margin-top: 15px;"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Login Modal with Eye Icon -->
+  <div id="admin-modal" class="modal">
+    <div class="modal-content card">
+      <h3 style="margin-bottom: 20px;">Админ Кирүү</h3>
+      <div class="input-group">
+        <label>Пароль киргизиңиз:</label>
+        <div class="password-wrapper">
+          <input type="password" id="admin-pass-input" placeholder="" autocomplete="off">
+          <i class="fa-solid fa-eye-slash eye-icon" onclick="togglePasswordVisibility('admin-pass-input', this)"></i>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="btn btn-blue" style="flex:1;" onclick="loginAdmin()">Кирүү</button>
+        <button class="btn btn-secondary" style="flex:1;" onclick="closeAdminModal()">Жабуу</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Zoom Child Details Modal (With WhatsApp & Delete Options) -->
+  <div id="child-zoom-modal" class="modal" onclick="closeChildZoomModal(event)">
+    <div class="zoom-modal-card" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; text-align:left;">
+        <h2 id="zoom-child-title" style="color:#00f2fe;"></h2>
+        <button class="btn btn-secondary" style="padding:4px 10px;" onclick="closeChildZoomModalForce()">&times;</button>
+      </div>
+      
+      <!-- Direct WhatsApp Action Header -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; background:#121a2d; padding:12px 18px; border-radius:12px; border:1px solid #2d3f5e;">
+        <a id="zoom-child-wa-link" href="#" target="_blank" style="color:#10b981; font-weight:bold; font-size:1.1rem; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+          <i class="fa-brands fa-whatsapp" style="font-size:1.4rem;"></i> <span id="zoom-child-phone-text"></span>
+        </a>
+      </div>
+
+      <div style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap; margin-bottom:20px;">
+        <div style="flex:1; min-width:250px;">
+          <img id="zoom-img-1" src="" style="width:100%; height:250px; object-fit:cover; border-radius:10px; border:1px solid #2d3f5e;">
+          <p style="margin-top:5px; font-size:0.85rem; color:#94a3b8;">1. Белинен өйдө</p>
+          <a id="zoom-down-1" href="#" download class="btn btn-blue download-btn-action" style="margin-top:8px; width:100%; font-size:0.8rem;">Жүктөө 1</a>
+        </div>
+        <div style="flex:1; min-width:250px;">
+          <img id="zoom-img-2" src="" style="width:100%; height:250px; object-fit:cover; border-radius:10px; border:1px solid #2d3f5e;">
+          <p style="margin-top:5px; font-size:0.85rem; color:#94a3b8;">2. Толук бою</p>
+          <a id="zoom-down-2" href="#" download class="btn btn-blue download-btn-action" style="margin-top:8px; width:100%; font-size:0.8rem;">Жүктөө 2</a>
+        </div>
+      </div>
+
+      <!-- Action Buttons Row: WhatsApp + Delete -->
+      <div style="display:flex; gap:12px; margin-bottom:15px;">
+        <a id="zoom-big-wa-btn" href="#" target="_blank" class="btn btn-success" style="flex:1; padding:12px; font-size:1rem;">
+          <i class="fa-brands fa-whatsapp" style="font-size:1.2rem;"></i> WhatsApp'ка кирүү
+        </a>
+        <button id="zoom-delete-btn" class="btn btn-danger delete-btn-action" style="flex:1; padding:12px; font-size:1rem;">
+          <i class="fa-solid fa-trash"></i> Өчүрүү (Удалить)
+        </button>
+      </div>
+
+      <button class="btn btn-secondary" style="width:100%;" onclick="closeChildZoomModalForce()">Жабуу</button>
+    </div>
+  </div>
+
+  <script>
+    let state = {
+      lang: 'ky',
+      adminPass: '1245',
+      allowDownload: true,
+      allowDelete: true,
+      tempFIO: '',
+      tempPhone: '',
+      img1Data: null,
+      img2Data: null,
+      students: [],
+      curators: [
+        { id: 1, name: 'Башкы Куратор', phone: '+99699114003' }
+      ],
+      sortDirection: { id: true, name: true, phone: true }
+    };
+
+    const dict = {
+      ky: { sub_title: "Байту закатка съемка", register: "Каттоо", admin: "Админ", curator_contact: "Куратор менен байланышуу", enter_info: "Маалымат киргизүү", fio_label: "Баланын Ф.И.О.:", next: "Улантуу \u2192", phone_title: "Телефон номер киргизүү", phone_label: "Телефон номериңиз:", rules_title: "Сүрөттөрдү туура тартуу үчүн төмөндөгү эрежени сактаңыз:", rule_bad_btn: "Мынтип тартпаңыз", rule_bad_text: "Тигинен (вертикалдуу) тартууга болбойт", rule_good_btn: "Ушунтип тартыңыз", rule_good_text: "Туурасынан (горизонталдуу) тартыңыз", rules_agree: "Тартуу эрежесин түшүндүм", photo_instruction: "Сүрөттөрдү горизонталдуу (туурасынан) тартыңыз: белинен өйдө жана толук бою түшкөн болушы керек.", photo1_title: "Белинен өйдө түшкөн", photo2_title: "Толук бою түшкөн", add_photo: "Сүрөт кошуу >", success_title: "Сиз ийгиликтүү катталдыңыз!", home: "Башкы бетке кайтуу" },
+      ru: { sub_title: "Съемка для Байту закат", register: "Регистрация", admin: "Админ", curator_contact: "Связаться с куратором", enter_info: "Ввод информации", fio_label: "Ф.И.О. ребенка:", next: "Продолжить \u2192", phone_title: "Ввод номера телефона", phone_label: "Ваш номер телефона:", rules_title: "Соблюдайте правила для правильной съемки:", rule_bad_btn: "Так не снимать", rule_bad_text: "Вертикально снимать нельзя", rule_good_btn: "Снимайте так", rule_good_text: "Снимайте горизонтально", rules_agree: "Я понял правила съемки", photo_instruction: "Снимайте фото горизонтально: по пояс и в полный рост.", photo1_title: "Снимок по пояс", photo2_title: "Снимок в полный рост", add_photo: "Добавить фото >", success_title: "Вы успешно зарегистрировались!", home: "На главную" },
+      ar: { sub_title: "تصوير بايتو زكات", register: "تسجيل", admin: "مشرف", curator_contact: "الاتصال بالمشرف", enter_info: "إدخال المعلومات", fio_label: "الاسم الكامل للطفل:", next: "متابعة \u2192", phone_title: "إدخال رقم الهاتف", phone_label: "رقم هاتفك:", rules_title: "اتبع القواعد للالتقاط الصحيح:", rule_bad_btn: "لا تلتقط هكذا", rule_bad_text: "لا يمكن الالتقاط عمودياً", rule_good_btn: "التقط هكذا", rule_good_text: "التقط أفقيًا", rules_agree: "لقد فهمت القواعد", photo_instruction: "التقط الصور أفقيًا: من الخصر إلى الأعلى وبطول كامل.", photo1_title: "صورة من الخصر للأعلى", photo2_title: "صورة بطول كامل", add_photo: "إضافة صورة >", success_title: "لقد تم تسجيلك بنجاح!", home: "الرئيسية" }
+    };
+
+    window.onload = function() {
+      const localData = localStorage.getItem('baitu_students');
+      if (localData) state.students = JSON.parse(localData);
+      const localPass = localStorage.getItem('baitu_pass');
+      if (localPass) state.adminPass = localPass;
+      const localCurators = localStorage.getItem('baitu_curators');
+      if (localCurators) state.curators = JSON.parse(localCurators);
+
+      renderCurators();
+      renderAdminData();
+      updateMainCuratorBtn();
+    };
+
+    /* Toggle Password Visibility with Eye / Eye-slash Icon */
+    function togglePasswordVisibility(inputId, icon) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      }
+    }
+
+    function showLoader(text, callback) {
+      document.getElementById('loader-text').innerText = text || 'Сакталууда...';
+      document.getElementById('loader').style.display = 'flex';
+      setTimeout(() => {
+        document.getElementById('loader').style.display = 'none';
+        if (callback) callback();
+      }, 500);
+    }
+
+    function goToStep(stepId) {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      const target = typeof stepId === 'number' ? `step-${stepId}` : `step-${stepId}`;
+      document.getElementById(target).classList.add('active');
+
+      const langBox = document.getElementById('lang-container');
+      langBox.style.display = (target === 'step-1') ? 'flex' : 'none';
+    }
+
+    function changeLanguage(lang) {
+      state.lang = lang;
+      document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[lang][key]) el.innerText = dict[lang][key];
+      });
+      document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    }
+
+    function updatePhonePlaceholder() {
+      const code = document.getElementById('country-code').value;
+      const phoneInput = document.getElementById('student-phone');
+      phoneInput.placeholder = code === '+996' ? '779654521' : '9991234567';
+    }
+
+    function formatPhoneInput(input) {
+      let val = input.value.replace(/\D/g, '');
+      input.value = val;
+    }
+
+    function submitFIO() {
+      const name = document.getElementById('student-name').value.trim();
+      if (!name) return alert('Ф.И.О. киргизиңиз!');
+      
+      const exists = state.students.some(s => s.name.toLowerCase() === name.toLowerCase());
+      if (exists) return alert('Бул Ф.И.О. мурда катталган! Сиз ийгиликтүү катталгансыз.');
+
+      state.tempFIO = name;
+      showLoader('Жүктөлүүдө...', () => {
+        document.getElementById('display-fio').innerText = state.tempFIO;
+        goToStep(3);
+      });
+    }
+
+    function submitPhone() {
+      const phone = document.getElementById('student-phone').value.trim();
+      const code = document.getElementById('country-code').value;
+      if (phone.length < 8) return alert('Телефон номерди туура киргизиңиз!');
+      state.tempPhone = code + phone;
+      showLoader('Жүктөлүүдө...', () => goToStep(4));
+    }
+
+    function toggleRuleNextBtn(checked) {
+      const btn = document.getElementById('btn-step-4');
+      btn.disabled = !checked;
+    }
+
+    function triggerCamera(id) { document.getElementById(id).click(); }
+
+    function handlePhotoUpload(input, prevId, iconId, imgNum) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.src = e.target.result;
+          img.onload = function() {
+            if (this.width < this.height) {
+              alert('Сүрөт сөзсүз ГОРИЗОНТАЛДУУ (туурасынан) тартылышы керек!');
+              input.value = '';
+              return;
+            }
+            showLoader('Сүрөт текшерилүүдө...', () => {
+              const prev = document.getElementById(prevId);
+              prev.src = e.target.result;
+              prev.style.display = 'block';
+              document.getElementById(iconId).style.display = 'none';
+              
+              if (imgNum === 1) state.img1Data = e.target.result;
+              if (imgNum === 2) state.img2Data = e.target.result;
+
+              checkPhotosAndActivateRegister();
+            });
+          };
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function checkPhotosAndActivateRegister() {
+      const regBtn = document.getElementById('final-register-btn');
+      if (state.img1Data && state.img2Data) {
+        regBtn.classList.add('active-btn');
+      } else {
+        regBtn.classList.remove('active-btn');
+      }
+    }
+
+    function finalSubmit() {
+      if (!state.img1Data || !state.img2Data) {
+        return alert('Эки сүрөттү тең тартып жүктөңүз!');
+      }
+      
+      showLoader('Сакталууда...', () => {
+        const newStudent = {
+          id: Date.now(),
+          name: state.tempFIO,
+          phone: state.tempPhone,
+          date: new Date().toLocaleDateString(),
+          img1: state.img1Data,
+          img2: state.img2Data
+        };
+        state.students.push(newStudent);
+        localStorage.setItem('baitu_students', JSON.stringify(state.students));
+        renderAdminData();
+        goToStep(6);
+      });
+    }
+
+    function resetForm() {
+      document.getElementById('student-name').value = '';
+      document.getElementById('student-phone').value = '';
+      document.getElementById('accept-rules').checked = false;
+      document.getElementById('btn-step-4').disabled = true;
+      document.getElementById('prev1').style.display = 'none';
+      document.getElementById('prev2').style.display = 'none';
+      document.getElementById('icon1').style.display = 'flex';
+      document.getElementById('icon2').style.display = 'flex';
+      state.img1Data = null; state.img2Data = null;
+      document.getElementById('final-register-btn').classList.remove('active-btn');
+      goToStep(1);
+    }
+
+    /* Admin Auth */
+    function openAdminModal() { 
+      document.getElementById('admin-pass-input').value = ''; 
+      document.getElementById('admin-modal').style.display = 'flex'; 
+    }
+    function closeAdminModal() { document.getElementById('admin-modal').style.display = 'none'; }
+    
+    function loginAdmin() {
+      const pass = document.getElementById('admin-pass-input').value;
+      if (pass === state.adminPass) {
+        closeAdminModal();
+        goToStep('admin-main');
+      } else {
+        alert('Пароль туура эмес!');
+      }
+    }
+
+    function openAdminCategory(cat) { goToStep(`admin-${cat}`); }
+
+    function switchAdminTab(tab) {
+      document.getElementById('tab-excel-btn').classList.toggle('active', tab === 'excel');
+      document.getElementById('tab-photos-btn').classList.toggle('active', tab === 'photos');
+      document.getElementById('tab-excel').style.display = tab === 'excel' ? 'block' : 'none';
+      document.getElementById('tab-photos').style.display = tab === 'photos' ? 'block' : 'none';
+    }
+
+    function sortTable(key) {
+      state.sortDirection[key] = !state.sortDirection[key];
+      const dir = state.sortDirection[key] ? 1 : -1;
+      state.students.sort((a, b) => {
+        if (a[key] < b[key]) return -1 * dir;
+        if (a[key] > b[key]) return 1 * dir;
+        return 0;
+      });
+      renderAdminData();
+    }
+
+    /* Excel-ге атайын табуляция (\t) менен экспорттоо функциясы */
+    function exportToExcel() {
+      if (state.students.length === 0) return alert('Экспорттоого маалымат жок!');
+      
+      // Ячейкаларды бөлүү үчүн табуляция (\t) колдонулат
+      let csvContent = "\uFEFF№\tФ.И.О.\tТелефон\tДата\n";
+      
+      state.students.forEach((s, idx) => {
+        // Телефон номери текст болуп (+ же 0 жоголбошу үчүн) капталган
+        csvContent += `${idx + 1}\t${s.name}\t'${s.phone}\t${s.date}\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute("download", `Baitu_Zakat_${new Date().toLocaleDateString()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    /* Render Data for both Excel & Photos List */
+    function renderAdminData() {
+      const excelQuery = document.getElementById('admin-search-excel') ? document.getElementById('admin-search-excel').value.toLowerCase() : '';
+      const excelFiltered = state.students.filter(s => s.name.toLowerCase().includes(excelQuery) || s.phone.includes(excelQuery));
+
+      const tbody = document.getElementById('excel-table-body');
+      if (tbody) {
+        tbody.innerHTML = excelFiltered.map((s, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${s.name}</td>
+            <td><a href="https://wa.me/${s.phone.replace(/\D/g,'')}" target="_blank" class="wa-link"><i class="fa-brands fa-whatsapp"></i> ${s.phone}</a></td>
+            <td>${s.date}</td>
+          </tr>
+        `).join('');
+      }
+
+      const photoQuery = document.getElementById('admin-search-photos') ? document.getElementById('admin-search-photos').value.toLowerCase() : '';
+      const photoFiltered = state.students.filter(s => s.name.toLowerCase().includes(photoQuery) || s.phone.includes(photoQuery));
+
+      renderVerticalPhotosList(photoFiltered);
+    }
+
+    /* Render Vertical List for Children Photos */
+    function renderVerticalPhotosList(list) {
+      const container = document.getElementById('children-vertical-list');
+      if (!container) return;
+
+      if (list.length === 0) {
+        container.innerHTML = '<p style="text-align:center; padding:30px; color:#64748b;">Балдар табылган жок</p>';
+        return;
+      }
+
+      container.innerHTML = list.map((child, index) => `
+        <div class="child-list-item" onclick="openChildZoomModal(${child.id})">
+          <div class="child-info">
+            <h4>№${index + 1} ${child.name}</h4>
+            <p><i class="fa-brands fa-whatsapp" style="color:#10b981;"></i> ${child.phone}</p>
+          </div>
+          <div class="child-thumbs">
+            <img src="${child.img1}" class="thumb-img" title="Белинен өйдө">
+            <img src="${child.img2}" class="thumb-img" title="Толук бою">
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* Open Full Detail Zoom Modal when clicked on item */
+    function openChildZoomModal(id) {
+      const child = state.students.find(s => s.id === id);
+      if (!child) return;
+
+      const cleanPhone = child.phone.replace(/\D/g, '');
+      const waUrl = `https://wa.me/${cleanPhone}`;
+
+      document.getElementById('zoom-child-title').innerText = child.name;
+      document.getElementById('zoom-child-phone-text').innerText = child.phone;
+      document.getElementById('zoom-child-wa-link').href = waUrl;
+      document.getElementById('zoom-big-wa-btn').href = waUrl;
+      
+      document.getElementById('zoom-img-1').src = child.img1;
+      document.getElementById('zoom-img-2').src = child.img2;
+
+      document.getElementById('zoom-down-1').href = child.img1;
+      document.getElementById('zoom-down-1').download = `${child.name}-1.jpg`;
+      document.getElementById('zoom-down-2').href = child.img2;
+      document.getElementById('zoom-down-2').download = `${child.name}-2.jpg`;
+
+      /* Apply Settings Constraints (Download & Delete visibility) */
+      document.querySelectorAll('.download-btn-action').forEach(b => {
+        b.style.display = state.allowDownload ? 'inline-flex' : 'none';
+      });
+
+      const delBtn = document.getElementById('zoom-delete-btn');
+      if (state.allowDelete) {
+        delBtn.style.display = 'inline-flex';
+        delBtn.onclick = function() { deleteStudent(child.id); };
+      } else {
+        delBtn.style.display = 'none';
+      }
+
+      document.getElementById('child-zoom-modal').style.display = 'flex';
+    }
+
+    function closeChildZoomModal(e) {
+      if (e.target.id === 'child-zoom-modal') {
+        document.getElementById('child-zoom-modal').style.display = 'none';
+      }
+    }
+    function closeChildZoomModalForce() {
+      document.getElementById('child-zoom-modal').style.display = 'none';
+    }
+
+    function deleteStudent(id) {
+      if (confirm('Бул баланы тизмеден өчүрүүнү каалайсызбы?')) {
+        state.students = state.students.filter(s => s.id !== id);
+        localStorage.setItem('baitu_students', JSON.stringify(state.students));
+        closeChildZoomModalForce();
+        renderAdminData();
+      }
+    }
+
+    /* Curator Management */
+    function renderCurators() {
+      const listContainer = document.getElementById('curators-list');
+      if (!listContainer) return;
+
+      listContainer.innerHTML = state.curators.map(c => `
+        <div style="background:#0b111e; border:1px solid #2d3f5e; border-radius:10px; padding:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <strong>${c.name}</strong>
+            <div style="color:#10b981; margin-top:3px;"><i class="fa-brands fa-whatsapp"></i> ${c.phone}</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-warning" style="padding:6px 12px;" onclick="editCurator(${c.id})"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-danger" style="padding:6px 12px;" onclick="deleteCurator(${c.id})"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function saveCurator() {
+      const name = document.getElementById('curator-name-input').value.trim();
+      const phone = document.getElementById('curator-phone-input').value.trim();
+      const editId = document.getElementById('curator-edit-id').value;
+
+      if (!name || !phone) return alert('Аты-жөнүн жана телефонун жазыңыз!');
+
+      if (editId) {
+        const cur = state.curators.find(c => c.id == editId);
+        if (cur) { cur.name = name; cur.phone = phone; }
+      } else {
+        state.curators.push({ id: Date.now(), name, phone });
+      }
+
+      localStorage.setItem('baitu_curators', JSON.stringify(state.curators));
+      cancelCuratorEdit();
+      renderCurators();
+      updateMainCuratorBtn();
+    }
+
+    function editCurator(id) {
+      const cur = state.curators.find(c => c.id === id);
+      if (cur) {
+        document.getElementById('curator-edit-id').value = cur.id;
+        document.getElementById('curator-name-input').value = cur.name;
+        document.getElementById('curator-phone-input').value = cur.phone;
+        document.getElementById('curator-save-btn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Өзгөртүүнү Сактоо';
+        document.getElementById('curator-cancel-btn').style.display = 'inline-flex';
+      }
+    }
+
+    function cancelCuratorEdit() {
+      document.getElementById('curator-edit-id').value = '';
+      document.getElementById('curator-name-input').value = '';
+      document.getElementById('curator-phone-input').value = '';
+      document.getElementById('curator-save-btn').innerHTML = '<i class="fa-solid fa-plus"></i> Кураторду Сактоо';
+      document.getElementById('curator-cancel-btn').style.display = 'none';
+    }
+
+    function deleteCurator(id) {
+      if (confirm('Бул кураторду тизмеден өчүрөсүзбү?')) {
+        state.curators = state.curators.filter(c => c.id !== id);
+        localStorage.setItem('baitu_curators', JSON.stringify(state.curators));
+        renderCurators();
+        updateMainCuratorBtn();
+      }
+    }
+
+    function updateMainCuratorBtn() {
+      const btn = document.getElementById('curator-main-btn');
+      if (state.curators.length > 0) {
+        btn.href = `https://wa.me/${state.curators[0].phone.replace(/\D/g, '')}`;
+      } else {
+        btn.href = '#';
+      }
+    }
+
+    /* Settings */
+    function savePassword() {
+      const newPass = document.getElementById('setting-pass').value;
+      if (newPass) {
+        state.adminPass = newPass;
+        localStorage.setItem('baitu_pass', newPass);
+        alert('Пароль ийгиликтүү өзгөрдү!');
+      }
+    }
+
+    function saveSettings() {
+      state.allowDownload = document.getElementById('toggle-download').checked;
+      state.allowDelete = document.getElementById('toggle-delete').checked;
+      renderAdminData();
+    }
+  </script>
+</body>
+</html>
